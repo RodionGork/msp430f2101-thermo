@@ -20,30 +20,45 @@ start:
     mov.w #(RAM_START + RAM_SIZE), SP
     mov.b &CALBC1_1MHZ, &BCSCTL1
     mov.b &CALDCO_1MHZ, &DCOCTL
+    mov.b #7, &P1DIR
     mov.b #2, &P1OUT
-    mov.b #2, &P1DIR
-    mov.b #10h, &P2DIR
 
     mov.b #68h, &CACTL1
     mov.b #04h, &CACTL2
     mov.b #01h, &CAPD
 repeat:
-    mov.b #10h, &P2OUT
+    mov.b #7, &P1OUT
+    mov.b #7, &P1DIR
     mov.w #1000, r8
     call #DELAY
-    mov.b #00h, &P2OUT
-    mov.w #2E0h, &TACTL
-    wait_cap:
-    bit.b #1, &CACTL2
-    jnz wait_cap
-    mov.w #0, &TACTL
-    mov.w &TAR, r8
+    mov.b #3, &P1DIR
+    call #measure
+    call #UART_SEND_H4
+    mov.b #' ', r8
+    call #UART_SEND
+    
+    mov.b #7, &P1OUT
+    mov.b #7, &P1DIR
+    mov.w #1000, r8
+    call #DELAY
+    mov.b #6, &P1DIR
+    call #measure
     call #UART_SEND_H4
     mov.b #13, r8
     call #UART_SEND
     mov.b #10, r8
     call #UART_SEND
     jmp repeat
+
+measure:
+    mov.b #2, &P1OUT
+    mov.w #2E4h, &TACTL
+    wait_cap:
+    bit.b #1, &CACTL2
+    jnz wait_cap
+    mov.w #0, &TACTL
+    mov.w &TAR, r8
+    ret
 
 ;=======================
 ; sends hex char from r8
